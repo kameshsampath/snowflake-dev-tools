@@ -1,0 +1,51 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  BUILDER_NAME: buildx-multi-arch
+  SNOW_CLI_VERSION: 3.1.0
+
+tasks:
+  default:
+    cmds:
+      - task: download_tools
+    silent: true
+
+  build:
+    silent: true
+    desc: build tools image
+    aliases:
+      - build
+    cmds:
+      - docker buildx inspect {{.BUILDER_NAME}} || docker buildx create
+        --name={{.BUILDER_NAME}} --driver=docker-container
+        --driver-opt=network=host
+      - docker buildx build --builder={{.BUILDER_NAME}} --push -t
+        ghcr.io/kameshsampath/snowflake-dev-tools --platform=linux/arm64
+        --platform=linux/amd64 -f Dockerfile {{.ROOT_DIR}}
+
+  download_tools:
+    silent: true
+    cmds:
+      - mkdir -p /tools/bin
+      - task: downloads_arm64
+      - task: downloads_amd64
+      - chmod +x /tools/bin/*
+
+  downloads_arm64:
+    silent: false
+    internal: true
+    platforms:
+      - "linux/arm64"
+    cmds:
+      # no tools
+      - echo "add tools for amd64"
+  downloads_amd64:
+    silent: false
+    internal: true
+    platforms:
+      - "linux/amd64"
+    cmds:
+      # no tools
+      - echo "add tools for amd64"
